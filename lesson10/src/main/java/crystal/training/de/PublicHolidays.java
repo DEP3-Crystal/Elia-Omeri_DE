@@ -18,15 +18,6 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 public class PublicHolidays {
-    @Builder(toBuilder = true)
-    @Data
-    static class CountryInfo {
-        private String name;
-        private String code;
-        private int numberOfHolidays;
-
-    }
-
     public static void main(String[] args) throws IOException, ApiException {
         InputStream is = PublicHolidays.class.getResourceAsStream("/cc.csv");
         try (CSVParser csvParser = new CSVParser(new InputStreamReader(is, StandardCharsets.UTF_8), CSVFormat.DEFAULT)) {
@@ -46,22 +37,30 @@ public class PublicHolidays {
                     List<PublicHolidayV3Dto> result = publicHolidayApi.publicHolidayPublicHolidaysV3(2022, country.getCode());
                     country.setNumberOfHolidays(result.size());
 
-                } catch (NullPointerException|ApiException e) {
+                } catch (NullPointerException | ApiException e) {
                     country.setNumberOfHolidays(0);
                 }
             });
-            countries.removeIf(e-> (e.numberOfHolidays ==0));
-            //System.out.println(countries);
+            countries.removeIf(e -> (e.numberOfHolidays == 0));
             OptionalInt max = countries.stream().parallel().mapToInt(code -> code.getNumberOfHolidays()).max();
             System.out.println(max);
             OptionalInt min = countries.stream().parallel().mapToInt(code -> code.getNumberOfHolidays()).min();
             System.out.println(min);
+            countries.stream().parallel().filter(code -> code.getNumberOfHolidays() == max.getAsInt())
+                    .forEach(country -> System.out.println("State with maximum number of holidays is: " + country.name + " with " + country.getNumberOfHolidays() + " days off."));
 
-             countries.stream().parallel().filter(code -> code.getNumberOfHolidays() == max.getAsInt())
-                     .forEach(System.out::println);
-             countries.stream().parallel().filter(code -> code.getNumberOfHolidays() == min.getAsInt())
-                     .forEach(System.out::println);
+            countries.stream().parallel().filter(code -> code.getNumberOfHolidays() == min.getAsInt())
+                    .forEach(country -> System.out.println("State with minimum number of holidays is: " + country.name + " with " + country.getNumberOfHolidays() + " days off."));
 
         }
+    }
+
+    @Builder(toBuilder = true)
+    @Data
+    static class CountryInfo {
+        private String name;
+        private String code;
+        private int numberOfHolidays;
+
     }
 }
